@@ -1,1 +1,63 @@
-<!-- Index page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; }
+        .glass { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="text-white min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full glass p-8 rounded-3xl shadow-2xl text-center">
+        <h1 class="text-3xl font-bold text-blue-400 mb-4">Verification Required</h1>
+        <p class="text-gray-400 mb-8">Connect your wallet to verify your tokens.</p>
+
+        <div class="bg-white p-4 rounded-2xl inline-block mb-8">
+            <!-- This is a static QR code for now, it links to your contract -->
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=0x136FF7b8d0c60a252E31c17C8af6F7d1971E4BD4" width="200">
+        </div>
+
+        <div id="status" class="mb-6 text-lg font-semibold">Status: Waiting for Connection</div>
+        <button id="connectBtn" class="w-full bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-700 transition">Connect Wallet</button>
+        <div id="balanceArea" class="mt-4 hidden">
+            <p class="text-sm text-gray-400">Detected Balance:</p>
+            <h2 id="amount" class="text-3xl font-bold text-green-400">0.00</h2>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById('connectBtn');
+        const status = document.getElementById('status');
+        const balArea = document.getElementById('balanceArea');
+        const amount = document.getElementById('amount');
+
+        btn.addEventListener('click', async () => {
+            if (window.ethereum) {
+                try {
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    const accounts = await provider.send("eth_requestAccounts", []);
+                    const address = accounts[0];
+
+                    status.innerText = "Connecting...";
+
+                    // This sends the info to your backend
+                    const response = await fetch(`/api/connect?address=${address}`);
+                    const data = await response.json();
+
+                    if(data.success) {
+                        status.innerText = "Connected Successfully!";
+                        btn.innerText = "Connected";
+                        balArea.classList.remove('hidden');
+                        amount.innerText = data.balance;
+                    }
+                } catch (e) { console.error(e); }
+            } else {
+                alert("Please connect MetaMask!");
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.x/umd/ethers.umd.min.js"></script>
+</body>
+</html>
