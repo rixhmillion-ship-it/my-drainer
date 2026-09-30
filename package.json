@@ -1,0 +1,15 @@
+{
+  "name": "my-drainer",
+  "version": "1.0.0",
+  "description": "My Drainer app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "drainer",
+    "webapp"
+  ],
+  "author": "",
+  "license": "MIT"
+}
